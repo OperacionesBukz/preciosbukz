@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # 🔒 Leer credenciales desde Streamlit Secrets
-SHOPIFY_ACCESS_TOKEN = st.secrets["SHOPIFY_ACCESS_TOKEN"]
+SHOPIFY_ACCESS_TOKEN = st.secrets["SHOPIFY_API_KEY"]
 SHOPIFY_STORE = st.secrets["SHOPIFY_STORE"]
 
 st.set_page_config(page_title="Consulta de precios Bukz", page_icon="📚", layout="centered")
