@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SHOPIFY_API_KEY = os.getenv("SHOPIFY_API_KEY")
-SHOPIFY_PASSWORD = os.getenv("SHOPIFY_PASSWORD")
 SHOPIFY_STORE = os.getenv("SHOPIFY_STORE")
 
 st.set_page_config(page_title="Consulta de precios Bukz", page_icon="📚", layout="centered")
