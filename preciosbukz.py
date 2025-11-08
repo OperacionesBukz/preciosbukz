@@ -29,30 +29,35 @@ isbn = st.text_input("Escanee o escriba el ISBN:", "", placeholder="Ejemplo: 978
 # ✅ Función para buscar el SKU (ISBN) en Shopify
 def get_variant_by_sku(sku):
     headers = {"X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN}
-    url = f"https://{SHOPIFY_STORE}/admin/api/2024-10/variants.json?sku={sku}"
-    response = requests.get(url, headers=headers)
+    # Traemos varias variantes por página para buscar manualmente
+    url = f"https://{SHOPIFY_STORE}/admin/api/2024-10/variants.json?limit=250"
+    variants = []
+    while url:
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            break
+        data = response.json()
+        variants.extend(data.get("variants", []))
+        # Revisa si hay siguiente página (paginación)
+        url = response.links.get("next", {}).get("url")
 
-    if response.status_code == 200:
-        variants = response.json().get("variants", [])
-        # 🔍 Filtrar coincidencia exacta
-        variant = next((v for v in variants if v["sku"] == sku), None)
+    # 🔍 Buscar coincidencia exacta en todas las variantes
+    variant = next((v for v in variants if str(v["sku"]).strip() == str(sku).strip()), None)
 
-        if variant:
-            product_id = variant["product_id"]
+    if variant:
+        product_id = variant["product_id"]
+        product_url = f"https://{SHOPIFY_STORE}/admin/api/2024-10/products/{product_id}.json"
+        product_resp = requests.get(product_url, headers=headers)
 
-            # Obtener título del producto
-            product_url = f"https://{SHOPIFY_STORE}/admin/api/2024-10/products/{product_id}.json"
-            product_resp = requests.get(product_url, headers=headers)
+        product_title = None
+        if product_resp.status_code == 200:
+            product_title = product_resp.json().get("product", {}).get("title")
 
-            product_title = None
-            if product_resp.status_code == 200:
-                product_title = product_resp.json().get("product", {}).get("title")
-
-            return {
-                "title": product_title,
-                "sku": variant["sku"],
-                "price": variant["price"],
-            }
+        return {
+            "title": product_title,
+            "sku": variant["sku"],
+            "price": variant["price"],
+        }
 
     return None
 
