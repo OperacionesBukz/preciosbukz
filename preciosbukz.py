@@ -28,36 +28,44 @@ isbn = st.text_input("Escanee o escriba el ISBN:", "", placeholder="Ejemplo: 978
 
 # ✅ Función para buscar el SKU (ISBN) en Shopify
 def get_variant_by_sku(sku):
-    headers = {"X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN}
-    # Traemos varias variantes por página para buscar manualmente
-    url = f"https://{SHOPIFY_STORE}/admin/api/2024-10/variants.json?limit=250"
-    variants = []
-    while url:
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            break
-        data = response.json()
-        variants.extend(data.get("variants", []))
-        # Revisa si hay siguiente página (paginación)
-        url = response.links.get("next", {}).get("url")
+    headers = {
+        "Content-Type": "application/json",
+        "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN
+    }
 
-    # 🔍 Buscar coincidencia exacta en todas las variantes
-    variant = next((v for v in variants if str(v["sku"]).strip() == str(sku).strip()), None)
-
-    if variant:
-        product_id = variant["product_id"]
-        product_url = f"https://{SHOPIFY_STORE}/admin/api/2024-10/products/{product_id}.json"
-        product_resp = requests.get(product_url, headers=headers)
-
-        product_title = None
-        if product_resp.status_code == 200:
-            product_title = product_resp.json().get("product", {}).get("title")
-
-        return {
-            "title": product_title,
-            "sku": variant["sku"],
-            "price": variant["price"],
+    query = """
+    {
+      productVariants(first: 1, query: "sku:%s") {
+        edges {
+          node {
+            id
+            sku
+            price
+            product {
+              title
+            }
+          }
         }
+      }
+    }
+    """ % sku
+
+    url = f"https://{SHOPIFY_STORE}/admin/api/2024-10/graphql.json"
+    response = requests.post(url, json={"query": query}, headers=headers)
+
+    if response.status_code == 200:
+        data = response.json()
+        edges = data.get("data", {}).get("productVariants", {}).get("edges", [])
+        if edges:
+            node = edges[0]["node"]
+            return {
+                "title": node["product"]["title"],
+                "sku": node["sku"],
+                "price": node["price"],
+            }
+    else:
+        st.error(f"Error al consultar Shopify: {response.status_code}")
+        st.write(response.text)
 
     return None
 
