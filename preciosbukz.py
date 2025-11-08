@@ -33,9 +33,11 @@ def get_variant_by_sku(sku):
     response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
-        data = response.json().get("variants", [])
-        if data:
-            variant = data[0]
+        variants = response.json().get("variants", [])
+        # 🔍 Filtrar coincidencia exacta
+        variant = next((v for v in variants if v["sku"] == sku), None)
+
+        if variant:
             product_id = variant["product_id"]
 
             # Obtener título del producto
@@ -51,6 +53,7 @@ def get_variant_by_sku(sku):
                 "sku": variant["sku"],
                 "price": variant["price"],
             }
+
     return None
 
 # ✅ Si el usuario ingresa un ISBN, ejecutar la búsqueda
