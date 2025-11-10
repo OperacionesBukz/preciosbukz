@@ -24,17 +24,26 @@ st.markdown("""
 st.title("📚 Consulta de precios Bukz")
 st.write("Escanea el ISBN del libro para ver el nombre y precio.")
 
-isbn = st.text_input("Escanee o escriba el ISBN:", "", placeholder="Ejemplo: 9781234567890")
+# Campo de texto con autofocus
+isbn = st.text_input("Escanee o escriba el ISBN:", "", placeholder="Ejemplo: 9781234567890", key="isbn_input")
 
-# 👇 Script para enfocar automáticamente el campo de texto
-st.markdown("""
+# Script que te deja listo para escribir apenas carga la app (como ChatGPT)
+st.markdown(
+    """
     <script>
-        var input = window.parent.document.querySelector('input[data-testid="stTextInput-isbn_input"]');
-        if (input) {
-            input.focus();
-        }
+        // Espera a que el componente de Streamlit esté disponible
+        const interval = setInterval(() => {
+            const input = window.parent.document.querySelector('input[id^="isbn_input"]');
+            if (input) {
+                input.focus();        // Enfoca el campo
+                input.select();       // Selecciona texto previo si hay
+                clearInterval(interval);
+            }
+        }, 100);
     </script>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
 
 # ✅ Función para buscar el SKU (ISBN) en Shopify
 def get_variant_by_sku(sku):
