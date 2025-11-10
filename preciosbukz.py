@@ -26,16 +26,6 @@ st.write("Escanea el ISBN del libro para ver el nombre y precio.")
 
 isbn = st.text_input("Escanee o escriba el ISBN:", "", placeholder="Ejemplo: 9781234567890")
 
-# 👇 Script para enfocar automáticamente el campo de texto
-st.markdown("""
-    <script>
-        var input = window.parent.document.querySelector('input[data-testid="stTextInput-isbn_input"]');
-        if (input) {
-            input.focus();
-        }
-    </script>
-""", unsafe_allow_html=True)
-
 # ✅ Función para buscar el SKU (ISBN) en Shopify
 def get_variant_by_sku(sku):
     headers = {
