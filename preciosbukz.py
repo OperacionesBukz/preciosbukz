@@ -24,26 +24,25 @@ st.markdown("""
 st.title("📚 Consulta de precios Bukz")
 st.write("Escanea el ISBN del libro para ver el nombre y precio.")
 
-# Campo de texto con autofocus
+# Campo de texto normal
 isbn = st.text_input("Escanee o escriba el ISBN:", "", placeholder="Ejemplo: 9781234567890", key="isbn_input")
 
-# Script que te deja listo para escribir apenas carga la app (como ChatGPT)
-st.markdown(
-    """
-    <script>
-        // Espera a que el componente de Streamlit esté disponible
-        const interval = setInterval(() => {
-            const input = window.parent.document.querySelector('input[id^="isbn_input"]');
-            if (input) {
-                input.focus();        // Enfoca el campo
-                input.select();       // Selecciona texto previo si hay
-                clearInterval(interval);
-            }
-        }, 100);
-    </script>
-    """,
-    unsafe_allow_html=True
-)
+# Botón para enfocar el campo
+focus_button = st.button("📘 Ubicar cursor en el campo")
+
+if focus_button:
+    st.markdown(
+        """
+        <script>
+        const input = window.document.querySelector('input[id^="isbn_input"]');
+        if (input) {
+            input.focus();
+            input.select();
+        }
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
 
 # ✅ Función para buscar el SKU (ISBN) en Shopify
 def get_variant_by_sku(sku):
@@ -52,22 +51,22 @@ def get_variant_by_sku(sku):
         "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN
     }
 
-    query = """
-    {
-      productVariants(first: 1, query: "sku:%s") {
-        edges {
-          node {
+    query = f"""
+    {{
+      productVariants(first: 1, query: "sku:{sku}") {{
+        edges {{
+          node {{
             id
             sku
             price
-            product {
+            product {{
               title
-            }
-          }
-        }
-      }
-    }
-    """ % sku
+            }}
+          }}
+        }}
+      }}
+    }}
+    """
 
     url = f"https://{SHOPIFY_STORE}/admin/api/2024-10/graphql.json"
     response = requests.post(url, json={"query": query}, headers=headers)
@@ -100,3 +99,4 @@ if isbn:
         st.markdown(f"<div class='price'>$ {result['price']}</div>", unsafe_allow_html=True)
     else:
         st.error("No se encontró ningún libro con ese ISBN en Shopify.")
+
